@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../source/list.x"
 
@@ -101,6 +102,7 @@ int main()
     assert(*((int *)(arr_out[1])) == 3);
     assert(*((int *)(arr_out[2])) == 2);
     assert(arr_out[3] == NULL);
+    free(arr_out);
 
     printf("Testing resize grow.\n");
     for (int i = 0; i < 16; i++)
@@ -115,13 +117,11 @@ int main()
     ssize_t found = -2;
     int find = 2;
     ListFind(list, &find, &found);
-    printf("Found: %zd\n", found);
     assert(found == 2);
 
     printf("Testing find with.\n");
     find = 15;
     ListFindWithComparator(list, &find, ListIntCompare, &found);
-    printf("Found: %zd\n", found);
     assert(found == -1);
 
     printf("Testing resize shrink.\n");
