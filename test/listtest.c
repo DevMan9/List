@@ -111,6 +111,19 @@ int main()
     assert(size == 19);
     assert(((size_t *)list)[1] == 32);
 
+    printf("Testing default find.\n");
+    ssize_t found = -2;
+    int find = 2;
+    ListFind(list, &find, &found);
+    printf("Found: %zd\n", found);
+    assert(found == 2);
+
+    printf("Testing find with.\n");
+    find = 15;
+    ListFindWithComparator(list, &find, ListIntCompare, &found);
+    printf("Found: %zd\n", found);
+    assert(found == -1);
+
     printf("Testing resize shrink.\n");
     for (int i = 0; i < 16; i++)
     {
@@ -119,17 +132,6 @@ int main()
     ListLength(list, &size);
     assert(size == 3);
     assert(((size_t *)list)[1] == 16);
-
-    printf("Testing default find.\n");
-    ssize_t found = -2;
-    int find = 2;
-    ListFind(list, &find, &found);
-    assert(found = 2);
-
-    printf("Testing find with.\n");
-    find = 15;
-    ListFindWithComparator(list, &find, ListIntCompare, &found);
-    assert(found = -1);
 
     printf("Destroying list.\n");
     DestroyList(&list);
