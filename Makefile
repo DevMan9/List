@@ -6,6 +6,7 @@ FLAGS = -Wall
 default:
 	@echo "Please specify a target."
 
+# Creates and runs the test of this utility.
 run_test: test
 	./executable/test
 
