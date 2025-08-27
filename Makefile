@@ -13,7 +13,7 @@ run_test: test
 test: executable/test
 
 TS =\
-source/listtest.c\
+test/listtest.c\
 source/list.c
 
 executable/test: $(TS) | executable

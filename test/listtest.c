@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "list.x"
+#include "../source/list.x"
 
 int ListIntCompare(const void *a, const void *b)
 {
