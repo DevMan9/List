@@ -1,24 +1,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "list.x"
+#include "C-List-StandardContract/list.x"
 
 size_t list_minimum_size = 16;
 
 struct List
 {
+    size_t item_size;
     size_t item_count;
-    size_t list_size;
-    void **items;
+    size_t size;
+    char *items;
     ListComparator comparator;
 };
 
-void CreateList(struct List **ret)
+void CreateList(size_t item_size, struct List **ret)
 {
     (*ret) = malloc(sizeof(**ret));
+    (*ret)->item_size = item_size;
     (*ret)->item_count = 0;
-    (*ret)->list_size = list_minimum_size;
-    (*ret)->items = malloc((*ret)->list_size * sizeof(*((*ret)->items)));
+    (*ret)->size = list_minimum_size;
+    (*ret)->items = malloc((*ret)->size * (*ret)->item_size * sizeof(*((*ret)->items)));
     (*ret)->comparator = NULL;
 }
 
@@ -42,69 +44,69 @@ void ListSetComparator(struct List *list, ListComparator comparator)
 
 static void _ListUpdateSize(struct List *list)
 {
-    if (list->item_count >= list->list_size)
+    if (list->item_count >= list->size)
     {
-        list->list_size <<= 1;
+        list->size <<= 1;
     }
-    else if ((list->list_size > list_minimum_size) && (list->item_count < (list->list_size >> 1)))
+    else if ((list->size > list_minimum_size) && (list->item_count < (list->size >> 1)))
     {
-        list->list_size >>= 1;
+        list->size >>= 1;
     }
     else
     {
         goto skip;
     }
-    list->items = realloc(list->items, list->list_size * sizeof(*(list->items)));
+    list->items = realloc(list->items, list->size * list->item_size * sizeof(*(list->items)));
 
 skip:
     return;
 }
 void ListAdd(struct List *list, void *item)
 {
-    list->items[list->item_count] = item;
+    memcpy(list->items + list->item_count * list->item_size, item, list->item_size);
     list->item_count++;
     _ListUpdateSize(list);
 }
 
 void ListAddAt(struct List *list, void *item, size_t index)
 {
-    memmove(list->items + index + 1, list->items + index, (list->item_count - index) * sizeof(*(list->items)));
-    list->items[index] = item;
+    memmove(list->items + (index + 1) * list->item_size, list->items + index * list->item_size, (list->item_count - index) * list->item_size * sizeof(*(list->items)));
+    memcpy(list->items + index * list->item_size, item, list->item_size);
     list->item_count++;
     _ListUpdateSize(list);
 }
 
-void ListGetAt(struct List *list, size_t index, void **ret)
+void ListGetAt(struct List *list, size_t index, void *ret)
 {
-    (*ret) = list->items[index];
+    memcpy(ret, list->items + index * list->item_size, list->item_size);
 }
 
-void ListRemoveAt(struct List *list, size_t index, void **ret)
+void ListRemoveAt(struct List *list, size_t index, void *ret)
 {
     if (ret != NULL)
     {
-        (*ret) = list->items[index];
+        memcpy(ret, list->items + index * list->item_size, list->item_size);
     }
-    memmove(list->items + index, list->items + index + 1, (list->item_count - index - 1) * sizeof(*(list->items)));
+    memmove(list->items + index * list->item_size, list->items + (index + 1) * list->item_size, (list->item_count - index - 1) * list->item_size * sizeof(*(list->items)));
     list->item_count--;
     _ListUpdateSize(list);
 }
 
 void ListSort(struct List *list)
 {
-    qsort(list->items, list->item_count, sizeof(*(list->items)), list->comparator);
+    ListSortWithComparator(list, list->comparator);
 }
 
 void ListSortWithComparator(struct List *list, ListComparator comparator)
 {
-    qsort(list->items, list->item_count, sizeof(*(list->items)), comparator);
+    qsort(list->items, list->item_count, list->item_size * sizeof(*(list->items)), comparator);
 }
 
-void ListToArray(struct List *list, void ***ret)
+void ListToArray(struct List *list, void *ret)
 {
-    (*ret) = malloc((1 + list->item_count) * sizeof(*(list->items)));
-    memcpy((*ret), list->items, list->item_count * sizeof(*(list->items)));
-    (*ret)[list->item_count] = NULL;
+    void **ret_alloc = ret;
+    (*ret_alloc) = malloc(list->item_count * list->item_size * sizeof(*(list->items)));
+    memcpy((*ret_alloc), list->items, list->item_count * list->item_size * sizeof(*(list->items)));
 }
 
 void ListLength(struct List *list, size_t *ret)
@@ -112,17 +114,17 @@ void ListLength(struct List *list, size_t *ret)
     (*ret) = list->item_count;
 }
 
-void ListFind(struct List *list, void *item, ssize_t *ret)
+void ListFind(struct List *list, void *item, size_t *ret)
 {
     ListFindWithComparator(list, item, list->comparator, ret);
 }
 
-void ListFindWithComparator(struct List *list, void *item, ListComparator comparator, ssize_t *ret)
+void ListFindWithComparator(struct List *list, void *item, ListComparator comparator, size_t *ret)
 {
     (*ret) = 0;
     while ((*ret) < list->item_count)
     {
-        if (comparator(&item, &(list->items[(*ret)])) == 0)
+        if (comparator(item, list->items + (*ret) * list->item_size) == 0)
         {
             break;
         }

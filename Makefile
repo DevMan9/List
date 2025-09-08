@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -Wall
+FLAGS = -Wall -Icontracts
 
 .PHONY: clean test run_test default
 
